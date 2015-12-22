@@ -1,6 +1,6 @@
 # greenDAO-demo
 ---
-Describe how to use greenDao in Android Studio
+Describe how to use greenDAO in Android Studio
 
 # 使用指南
 ---
