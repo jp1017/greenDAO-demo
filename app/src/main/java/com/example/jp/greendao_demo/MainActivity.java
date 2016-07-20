@@ -9,25 +9,37 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.example.jp.DaoMaster;
-import com.example.jp.DaoSession;
 import com.example.jp.User;
+import com.example.jp.UserDao;
+import com.example.jp.greendao_demo.db.DbUtil;
+import com.example.jp.greendao_demo.db.UserHelper;
+import com.socks.library.KLog;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    private DaoMaster mDaoMaster;
-    private DaoSession mDaoSession;
-    List<User> users = new ArrayList<>();
+    private UserHelper userHelper;
+
+    private List<User> users = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //建立数据库，这个最好写到Application中，这里方便就写到了这里
-        buildDatabase();
+        userHelper = DbUtil.getPersonService();
+
+        /****** 数据库的增删改查测试开始 *******/
+
+        userInsert();       //增
+        userDelete();       //删
+        userUpdate();       //改
+        userQuery();        //查
+
+        /****** 数据库的增删改查测试结束 *******/
+
+
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -41,19 +53,60 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    private void userQuery() {
+        List<User> users = userHelper.queryBuilder().where(UserDao.Properties.Number.eq("3")).list();
+        List<User> users1 = userHelper.query("where NUMBER=?", "5");
+        List<User> users2 = userHelper.queryAll();
+
+        for (User u : users) {
+            KLog.w("query: " + u.getPassword());
+        }
+
+        for (User u : users1) {
+            KLog.d("query1: " + u.getPassword());
+        }
+
+        for (User u : users2) {
+            KLog.i("query2: " + u.getPassword());
+        }
+    }
+
+    private void userUpdate() {
+        User user = new User();
+        user.setNumber("77");
+        user.setPassword("##**77**##");
+        userHelper.save(user);
+        user.setPassword("******77******");
+        userHelper.update(user);        //更新单个
+
+        User user1 = new User();
+        user1.setNumber("77");
+        user1.setPassword("##**77**##");
+        userHelper.save(user1);
+        user1.setPassword("******77******");
+        userHelper.update(user, user1);     //更新多个
+    }
+
+    private void userDelete() {
+        User user = new User();
+        user.setNumber("666");
+        user.setPassword("666666");
+        userHelper.save(user);
+        userHelper.delete(user);
+    }
+
+    private void userInsert() {
+        userHelper.deleteAll();//清空
+
         for (int i = 0; i < 10; i++) {
             User user = new User();
             user.setNumber(i + "");
             user.setPassword("#####" + i + "*****");
             users.add(user);
-            mDaoSession.insert(user);
         }
-    }
-
-    private void buildDatabase() {
-        DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(this, "user-db", null);
-        mDaoMaster = new DaoMaster(helper.getWritableDatabase());
-        mDaoSession = mDaoMaster.newSession();
+        userHelper.save(users);
     }
 
     @Override
